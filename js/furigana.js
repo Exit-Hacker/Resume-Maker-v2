@@ -1,6 +1,7 @@
 /* ==========================================
    Resume Maker v2
    Furigana Auto
+   Japanese / English → Katakana
    Kuromoji + Web Worker
    ========================================== */
 
@@ -10,30 +11,222 @@ let workerLoading = false;
 
 
 /* ==========================================
+   English → Katakana
+   ========================================== */
+
+function englishToKatakana(text) {
+
+    let value =
+        text
+            .trim()
+            .replace(/\s+/g, " ")
+            .toUpperCase();
+
+    if (!value) {
+        return "";
+    }
+
+
+    /*
+     * Known/common name patterns.
+     * Longest patterns first.
+     */
+
+    const rules = [
+
+        ["WUNNA", "ウンナ"],
+        ["PHYO", "ピョー"],
+        ["WAI", "ワイ"],
+
+        ["THWE", "トゥエ"],
+        ["THU", "トゥ"],
+        ["THE", "ザ"],
+        ["THA", "タ"],
+
+        ["PHYU", "ピュー"],
+        ["PHY", "フィ"],
+
+        ["KHIN", "キン"],
+        ["KHANT", "カン"],
+        ["KHA", "カ"],
+
+        ["KYAW", "チョー"],
+        ["KYI", "チー"],
+
+        ["MYAT", "ミャッ"],
+        ["MYO", "ミョー"],
+        ["MYA", "ミャ"],
+
+        ["NYI", "ニー"],
+        ["NYO", "ニョー"],
+
+        ["NWE", "ヌエ"],
+        ["NWAY", "ヌウェ"],
+
+        ["HTET", "テッ"],
+        ["HTUN", "トゥン"],
+        ["HTOO", "トゥー"],
+
+        ["HLA", "ラ"],
+        ["HLYA", "リャ"],
+
+        ["ZAW", "ゾー"],
+        ["ZIN", "ジン"],
+        ["ZAY", "ゼイ"],
+
+        ["TUN", "トゥン"],
+        ["TUN", "トゥン"],
+
+        ["SOE", "ソー"],
+        ["KO", "コー"],
+        ["MIN", "ミン"],
+        ["WIN", "ウィン"],
+        ["LIN", "リン"],
+        ["LWIN", "ルイン"],
+
+        ["AUNG", "アウン"],
+        ["AUNG", "アウン"],
+
+        ["OO", "ウー"],
+        ["OO", "ウー"],
+
+        ["PH", "フ"],
+        ["KH", "ク"],
+        ["KY", "キ"],
+        ["MY", "ミ"],
+        ["NY", "ニ"],
+        ["TH", "ト"],
+        ["HT", "ト"],
+
+        ["SH", "シュ"],
+        ["CH", "チ"],
+        ["NG", "ン"],
+
+        ["AE", "エ"],
+        ["AI", "アイ"],
+        ["AY", "エイ"],
+        ["AW", "オー"],
+        ["EI", "エイ"],
+        ["EE", "イー"],
+        ["EA", "イー"],
+        ["IE", "イー"],
+        ["OA", "オア"],
+        ["OE", "オー"],
+        ["OO", "ウー"],
+        ["OU", "オウ"],
+
+        ["A", "ア"],
+        ["B", "ブ"],
+        ["C", "ク"],
+        ["D", "ド"],
+        ["E", "エ"],
+        ["F", "フ"],
+        ["G", "グ"],
+        ["H", "ハ"],
+        ["I", "イ"],
+        ["J", "ジ"],
+        ["K", "ク"],
+        ["L", "ル"],
+        ["M", "ム"],
+        ["N", "ン"],
+        ["O", "オ"],
+        ["P", "プ"],
+        ["Q", "ク"],
+        ["R", "ル"],
+        ["S", "ス"],
+        ["T", "ト"],
+        ["U", "ウ"],
+        ["V", "ブ"],
+        ["W", "ワ"],
+        ["X", "クス"],
+        ["Y", "イ"],
+        ["Z", "ズ"]
+
+    ];
+
+
+    /*
+     * Keep spaces.
+     */
+
+    const words =
+        value.split(" ");
+
+
+    const result =
+        words.map(function(word) {
+
+            let output = word;
+
+
+            /*
+             * Apply rules.
+             */
+
+            for (const rule of rules) {
+
+                output =
+                    output.replaceAll(
+                        rule[0],
+                        rule[1]
+                    );
+
+            }
+
+
+            return output;
+
+        });
+
+
+    return result.join("・");
+}
+
+
+/* ==========================================
+   Check English Name
+   ========================================== */
+
+function isEnglishName(text) {
+
+    return /^[A-Za-z\s.'-]+$/.test(
+        text.trim()
+    );
+
+}
+
+
+/* ==========================================
    Create Kuromoji Worker
    ========================================== */
 
 function createFuriganaWorker() {
 
-    if (furiganaWorker || workerLoading) {
+    if (
+        furiganaWorker ||
+        workerLoading
+    ) {
         return;
     }
 
     workerLoading = true;
 
+
     const workerCode = `
 
         let tokenizer = null;
+
 
         self.onmessage = function(event) {
 
             const data = event.data;
 
+
             /* ==============================
                Load Kuromoji
                ============================== */
 
-            if (data.type === "load") {
+            if(data.type === "load") {
 
                 try {
 
@@ -41,104 +234,133 @@ function createFuriganaWorker() {
                         "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"
                     );
 
+
                     kuromoji.builder({
 
                         dicPath:
                             "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
 
-                    }).build(function(error, instance) {
+                    }).build(
 
-                        if (error) {
+                        function(error, instance) {
+
+                            if(error) {
+
+                                self.postMessage({
+
+                                    type: "error",
+
+                                    message:
+                                        error.message ||
+                                        "Kuromoji loading failed."
+
+                                });
+
+                                return;
+
+                            }
+
+
+                            tokenizer = instance;
+
 
                             self.postMessage({
-                                type: "error",
-                                message:
-                                    error.message ||
-                                    "Kuromoji loading failed."
+
+                                type: "ready"
+
                             });
 
-                            return;
                         }
 
-                        tokenizer = instance;
-
-                        self.postMessage({
-                            type: "ready"
-                        });
-
-                    });
+                    );
 
                 }
-                catch (error) {
+                catch(error) {
 
                     self.postMessage({
+
                         type: "error",
+
                         message:
                             error.message ||
                             "Kuromoji error."
+
                     });
 
                 }
 
                 return;
+
             }
 
 
             /* ==============================
-               Convert text
+               Japanese → Katakana
                ============================== */
 
-            if (data.type === "convert") {
+            if(data.type === "convert") {
 
-                if (!tokenizer) {
+                if(!tokenizer) {
                     return;
                 }
+
 
                 const text =
                     data.text || "";
 
-                if (!text.trim()) {
+
+                if(!text.trim()) {
 
                     self.postMessage({
+
                         type: "result",
-                        target: data.target,
+
+                        target:
+                            data.target,
+
                         text: ""
+
                     });
 
                     return;
+
                 }
+
 
                 try {
 
                     const tokens =
-                        tokenizer.tokenize(text);
+                        tokenizer.tokenize(
+                            text
+                        );
+
 
                     const result =
-                        tokens.map(function(token) {
+                        tokens
+                            .map(
+                                function(token) {
 
-                            /*
-                             * Keep numbers,
-                             * English and symbols.
-                             */
+                                    if(
+                                        /^[0-9A-Za-z\\s\\-]+$/
+                                            .test(
+                                                token.surface_form
+                                            )
+                                    ) {
 
-                            if (
-                                /^[0-9A-Za-z\s\-]+$/
-                                    .test(
-                                        token.surface_form
-                                    )
-                            ) {
+                                        return token.surface_form;
 
-                                return token.surface_form;
+                                    }
 
-                            }
 
-                            return (
-                                token.reading ||
-                                token.surface_form ||
-                                ""
-                            );
+                                    return (
+                                        token.reading ||
+                                        token.surface_form ||
+                                        ""
+                                    );
 
-                        }).join("");
+                                }
+                            )
+                            .join("");
 
 
                     self.postMessage({
@@ -154,7 +376,7 @@ function createFuriganaWorker() {
                     });
 
                 }
-                catch (error) {
+                catch(error) {
 
                     self.postMessage({
 
@@ -193,10 +415,6 @@ function createFuriganaWorker() {
         new Worker(workerURL);
 
 
-    /* ==========================================
-       Worker Message
-       ========================================== */
-
     furiganaWorker.onmessage =
         function(event) {
 
@@ -204,11 +422,7 @@ function createFuriganaWorker() {
                 event.data;
 
 
-            /* ==============================
-               Ready
-               ============================== */
-
-            if (data.type === "ready") {
+            if(data.type === "ready") {
 
                 workerReady = true;
                 workerLoading = false;
@@ -221,11 +435,7 @@ function createFuriganaWorker() {
             }
 
 
-            /* ==============================
-               Result
-               ============================== */
-
-            if (data.type === "result") {
+            if(data.type === "result") {
 
                 const target =
                     document.getElementById(
@@ -233,7 +443,7 @@ function createFuriganaWorker() {
                     );
 
 
-                if (target) {
+                if(target) {
 
                     target.value =
                         data.text || "";
@@ -244,11 +454,7 @@ function createFuriganaWorker() {
             }
 
 
-            /* ==============================
-               Error
-               ============================== */
-
-            if (data.type === "error") {
+            if(data.type === "error") {
 
                 console.error(
                     "Kuromoji:",
@@ -261,10 +467,6 @@ function createFuriganaWorker() {
 
         };
 
-
-    /* ==========================================
-       Worker Error
-       ========================================== */
 
     furiganaWorker.onerror =
         function(error) {
@@ -279,10 +481,6 @@ function createFuriganaWorker() {
 
         };
 
-
-    /* ==========================================
-       Start Kuromoji
-       ========================================== */
 
     furiganaWorker.postMessage({
 
@@ -313,20 +511,16 @@ function convertFurigana(
         );
 
 
-    if (!source || !target) {
+    if(!source || !target) {
         return;
     }
 
 
     const text =
-        source.value;
+        source.value.trim();
 
 
-    /* ==============================
-       Empty
-       ============================== */
-
-    if (!text.trim()) {
+    if(!text) {
 
         target.value = "";
 
@@ -334,11 +528,29 @@ function convertFurigana(
     }
 
 
-    /* ==============================
-       Start Worker
-       ============================== */
+    /* ======================================
+       English → Katakana
+       ====================================== */
 
-    if (!furiganaWorker) {
+    if(
+        sourceId === "name" &&
+        isEnglishName(text)
+    ) {
+
+        target.value =
+            englishToKatakana(
+                text
+            );
+
+        return;
+    }
+
+
+    /* ======================================
+       Japanese → Kuromoji
+       ====================================== */
+
+    if(!furiganaWorker) {
 
         createFuriganaWorker();
 
@@ -346,24 +558,15 @@ function convertFurigana(
     }
 
 
-    /* ==============================
-       Worker loading
-       ============================== */
-
-    if (!workerReady) {
+    if(!workerReady) {
 
         return;
     }
 
 
-    /* ==============================
-       Convert
-       ============================== */
-
     furiganaWorker.postMessage({
 
-        type:
-            "convert",
+        type: "convert",
 
         target:
             targetId,
@@ -389,10 +592,12 @@ document.addEventListener(
                 "name"
             );
 
+
         const address =
             document.getElementById(
                 "address"
             );
+
 
         const building =
             document.getElementById(
@@ -404,7 +609,7 @@ document.addEventListener(
            Name
            ================================== */
 
-        if (name) {
+        if(name) {
 
             name.addEventListener(
                 "input",
@@ -425,7 +630,7 @@ document.addEventListener(
            Address
            ================================== */
 
-        if (address) {
+        if(address) {
 
             address.addEventListener(
                 "input",
@@ -446,7 +651,7 @@ document.addEventListener(
            Building
            ================================== */
 
-        if (building) {
+        if(building) {
 
             building.addEventListener(
                 "input",
@@ -466,12 +671,6 @@ document.addEventListener(
         /* ==================================
            Start Kuromoji
            ================================== */
-
-        /*
-         * Start after page is ready.
-         * Worker prevents the main page
-         * from freezing.
-         */
 
         setTimeout(
             function() {
