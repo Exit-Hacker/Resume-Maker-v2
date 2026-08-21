@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>履歴書 Preview</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css">
+
+    <link
+        rel="stylesheet"
+        href="css/preview.css">
+
+    <link
+        rel="stylesheet"
+        href="css/print.css">
+
+</head>
+
+<body>
+
+
+<!-- ==========================
+     Toolbar
+=========================== -->
+
+<div class="preview-toolbar">
+
+    <button
+        id="printResume">
+
+        印刷
+
+    </button>
+
+    <button
+        onclick="location.href='index.html'">
+
+        戻る
+
+    </button>
+
+</div>
+
+
+<!-- ==========================
+     Resume
+=========================== -->
+
+<div class="resume">
+
+
+<!-- ==========================
+     Header
+=========================== -->
+
+<div class="resume-header">
+
+    <div>
+
+        <h1 class="resume-title">
+
+            履歴書
+
+        </h1>
+
+        <p
+            class="resume-date"
+            id="r-resume-date">
+
+        </p>
+
+    </div>
+
+
+    <div class="photo-box">
+
+        <img
+            id="r-photo"
+            src=""
+            alt="Photo">
+
+    </div>
+
+</div>
+
+
+<!-- ==========================
+     Basic Information
+=========================== -->
+
+<table class="resume-table">
+
+<tr>
+
+    <th>
+
+        氏名
+
+    </th>
+
+    <td id="r-name">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        フリガナ
+
+    </th>
+
+    <td id="r-furigana">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        生年月日
+
+    </th>
+
+    <td id="r-birthday">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        年齢
+
+    </th>
+
+    <td id="r-age">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        性別
+
+    </th>
+
+    <td id="r-gender">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        電話番号
+
+    </th>
+
+    <td id="r-phone">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        Email
+
+    </th>
+
+    <td id="r-email">
+
+    </td>
+
+</tr>
+
+</table>
+
+
+<!-- ==========================
+     Address
+=========================== -->
+
+<table class="resume-table">
+
+<tr>
+
+    <th>
+
+        郵便番号
+
+    </th>
+
+    <td id="r-postal">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        住所フリガナ
+
+    </th>
+
+    <td
+        id="r-address-furigana"
+        class="address-furigana">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        住所
+
+    </th>
+
+    <td
+        id="r-address"
+        class="address">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        建物名
+
+    </th>
+
+    <td id="r-building">
+
+    </td>
+
+</tr>
+
+<tr>
+
+    <th>
+
+        建物名フリガナ
+
+    </th>
+
+    <td id="r-building-furigana">
+
+    </td>
+
+</tr>
+
+</table>
+
+<!-- ==========================
+     Education
+=========================== -->
+
+<h2>学歴</h2>
+
+<table class="education-table">
+
+    <thead>
+
+        <tr>
+
+            <th>年</th>
+
+            <th>月</th>
+
+            <th>学歴</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody id="education-body">
+
+    </tbody>
+
+</table>
+
+
+<!-- ==========================
+     Work
+=========================== -->
+
+<h2 class="mt-3">職歴</h2>
+
+<table class="work-table">
+
+    <thead>
+
+        <tr>
+
+            <th>年</th>
+
+            <th>月</th>
+
+            <th>職歴</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody id="work-body">
+
+    </tbody>
+
+</table>
+
+
+<!-- ==========================
+     Motivation
+=========================== -->
+
+<h2 class="mt-3">
+
+    志望動機
+
+</h2>
+
+<div class="motivation-box">
+
+    <p id="r-motivation">
+
+        接客が好きで、お客様に喜んでいただける仕事をしたいと考えております。
+        日本語能力を活かし、責任感を持って一生懸命頑張ります。
+
+    </p>
+
+</div>
+
+
+<!-- ==========================
+     Request
+=========================== -->
+
+<h2 class="mt-3">
+
+    本人希望記入欄
+
+</h2>
+
+<div class="request-box">
+
+    <p id="r-request">
+
+        貴社の規定に従います。
+
+    </p>
+
+</div>
+
+
+<!-- ==========================
+     Footer
+=========================== -->
+
+<div class="resume-footer">
+
+    Resume Maker v2
+
+</div>
+
+</div>
+
+
+<!-- ==========================
+     JavaScript
+=========================== -->
+
+<script src="js/storage.js"></script>
+
+<script src="js/preview.js"></script>
+
+</body>
+
+</html>

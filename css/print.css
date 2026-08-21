@@ -1,0 +1,121 @@
+/* ==========================================
+   Resume Maker v2
+   print.css
+   A4 ONE PAGE
+   ========================================== */
+
+
+/* ==========================================
+   A4
+   ========================================== */
+
+@page {
+
+    size: A4;
+
+    margin: 0;
+
+}
+
+
+/* ==========================================
+   PRINT
+   ========================================== */
+
+@media print {
+
+    html {
+
+        width: 210mm !important;
+
+        height: 296mm !important;
+
+        margin: 0 !important;
+
+        padding: 0 !important;
+
+    }
+
+
+    body {
+
+        width: 210mm !important;
+
+        height: 296mm !important;
+
+        margin: 0 !important;
+
+        padding: 0 !important;
+
+        background: #ffffff !important;
+
+        overflow: hidden !important;
+
+    }
+
+
+    .preview-toolbar {
+
+        display: none !important;
+
+    }
+
+
+    .resume {
+
+        width: 210mm !important;
+
+        height: 296mm !important;
+
+        min-height: 296mm !important;
+
+        max-height: 296mm !important;
+
+        margin: 0 !important;
+
+        padding: 8mm !important;
+
+        border: none !important;
+
+        box-shadow: none !important;
+
+        overflow: hidden !important;
+
+
+        page-break-before: avoid !important;
+
+        page-break-after: avoid !important;
+
+        page-break-inside: avoid !important;
+
+
+        break-before: avoid !important;
+
+        break-after: avoid !important;
+
+        break-inside: avoid !important;
+
+    }
+
+
+    .resume h2,
+    .resume table,
+    .motivation-box,
+    .request-box {
+
+        page-break-before: avoid !important;
+
+        page-break-after: avoid !important;
+
+        page-break-inside: avoid !important;
+
+
+        break-before: avoid !important;
+
+        break-after: avoid !important;
+
+        break-inside: avoid !important;
+
+    }
+
+}

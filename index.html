@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Resume Maker v2</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css">
+
+    <link
+        rel="stylesheet"
+        href="css/form.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ========================= -->
+    <!-- Header -->
+    <!-- ========================= -->
+
+    <header class="page-header">
+
+        <h1>履歴書作成</h1>
+
+        <p>
+            Resume Maker Professional
+        </p>
+
+    </header>
+
+
+    <!-- ========================= -->
+    <!-- Personal Information -->
+    <!-- ========================= -->
+
+    <section class="card personal-section">
+
+        <h2>基本情報</h2>
+
+        <div class="grid-2">
+
+            <div class="form-group">
+
+                <label for="name">
+
+                    氏名
+
+                </label>
+
+                <input
+                    id="name"
+                    type="text"
+                    placeholder="山田 太郎">
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="furigana">
+
+                    フリガナ
+
+                </label>
+
+                <input
+                    id="furigana"
+                    type="text"
+                    placeholder="ヤマダ タロウ">
+
+            </div>
+
+        </div>
+
+
+        <div class="grid-4">
+
+            <div class="form-group">
+
+                <label>年</label>
+
+                <select id="birthYear"></select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>月</label>
+
+                <select id="birthMonth"></select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>日</label>
+
+                <select id="birthDay"></select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>年齢</label>
+
+                <input
+                    id="age"
+                    type="text"
+                    readonly>
+
+            </div>
+
+        </div>
+
+
+        <div class="grid-2">
+
+            <div class="form-group">
+
+                <label for="gender">
+
+                    性別
+
+                </label>
+
+                <select id="gender">
+
+                    <option value="">
+                        選択
+                    </option>
+
+                    <option value="男">
+                        男
+                    </option>
+
+                    <option value="女">
+                        女
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- Contact -->
+    <!-- ========================= -->
+
+    <section class="card contact-section">
+
+        <h2>連絡先</h2>
+
+        <div class="grid-2">
+
+            <div class="form-group">
+
+                <label for="phone">
+
+                    電話番号
+
+                </label>
+
+                <input
+                    id="phone"
+                    type="tel"
+                    placeholder="090-1234-5678">
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="email">
+
+                    Email
+
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="example@email.com">
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- Address -->
+    <!-- ========================= -->
+
+    <section class="card address-section">
+
+        <h2>住所</h2>
+
+        <div class="postal-group">
+
+            <input
+                id="postalCode"
+                type="text"
+                placeholder="670-8023">
+
+            <button
+                id="searchAddress"
+                type="button">
+
+                住所検索
+
+            </button>
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="addressFurigana">
+
+                住所フリガナ
+
+            </label>
+
+            <input
+                id="addressFurigana"
+                type="text"
+                readonly>
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="address">
+
+                住所
+
+            </label>
+
+            <input
+                id="address"
+                type="text">
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="building">
+
+                建物名・部屋番号
+
+            </label>
+
+            <input
+                id="building"
+                type="text"
+                placeholder="○○マンション205号">
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="buildingFurigana">
+
+                建物名フリガナ
+
+            </label>
+
+            <input
+                id="buildingFurigana"
+                type="text">
+
+        </div>
+
+    </section>
+
+<!-- ===========Part2============== -->
+
+    <!-- ========================= -->
+    <!-- Education -->
+    <!-- ========================= -->
+
+    <section class="card education-section">
+
+        <h2>学歴</h2>
+
+        <div id="education-list">
+
+            <div class="education-row">
+
+                <select class="education-year"></select>
+
+                <select class="education-month"></select>
+
+                <input
+                    type="text"
+                    class="education-school"
+                    placeholder="学校名">
+
+                <button
+                    type="button"
+                    class="deleteEducation">
+
+                    ✕
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <button
+            type="button"
+            id="addEducation"
+            class="add-btn">
+
+            ＋ 学歴追加
+
+        </button>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- Work History -->
+    <!-- ========================= -->
+
+    <section class="card work-section">
+
+        <h2>職歴</h2>
+
+        <div id="work-list">
+
+            <div class="work-row">
+
+                <select class="work-year"></select>
+
+                <select class="work-month"></select>
+
+                <input
+                    type="text"
+                    class="work-company"
+                    placeholder="会社名">
+
+                <button
+                    type="button"
+                    class="deleteWork">
+
+                    ✕
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <button
+            type="button"
+            id="addWork"
+            class="add-btn">
+
+            ＋ 職歴追加
+
+        </button>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- Photo -->
+    <!-- ========================= -->
+
+    <section class="card photo-section">
+
+        <h2>写真</h2>
+
+        <input
+            id="photo"
+            type="file"
+            accept="image/*">
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- Resume Date -->
+    <!-- ========================= -->
+
+    <section class="card">
+
+        <h2>履歴書日付</h2>
+
+        <input
+            id="resumeDate"
+            type="date">
+
+        <p id="resumeDateJP"></p>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- Buttons -->
+    <!-- ========================= -->
+
+    <section class="button-section">
+
+        <button
+            id="generateResume"
+            type="button"
+            class="primary-btn">
+
+            履歴書を作成
+
+        </button>
+
+        <button
+            id="resetForm"
+            type="reset"
+            class="secondary-btn">
+
+            リセット
+
+        </button>
+
+    </section>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- JavaScript -->
+<!-- ========================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
+
+<script src="js/app.js"></script>
+<script src="js/postal.js"></script>
+<script src="js/furigana.js"></script>
+<script src="js/validation.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/education.js"></script>
+<script src="js/work.js"></script>
+<script src="js/photo.js"></script>
+
+</body>
+
+</html>
