@@ -745,48 +745,76 @@ if(resetForm){
 
             event.preventDefault();
 
+
             /* =========================
-               Clear saved data
+               Confirm
                ========================= */
 
-            if(typeof clearResume === "function"){
+            const confirmed = confirm(
+                "入力した内容をすべて削除しますか？"
+            );
+
+            if(!confirmed){
+
+                return;
+
+            }
+
+
+            /* =========================
+               Clear LocalStorage
+               ========================= */
+
+            if(
+                typeof clearResume === "function"
+            ){
 
                 clearResume();
 
             }
+            else{
 
-
-            /* =========================
-               Clear normal inputs
-               ========================= */
-
-            const form =
-                resetForm.closest("form");
-
-            if(form){
-
-                form.reset();
+                localStorage.removeItem(
+                    "resumeData"
+                );
 
             }
 
 
             /* =========================
-               Clear all text inputs
+               Clear all input fields
                ========================= */
 
             document
                 .querySelectorAll(
-                    "input[type='text'], input[type='tel'], input[type='email'], input[type='date'], textarea"
+                    "input, textarea"
                 )
                 .forEach(input => {
 
-                    input.value = "";
+                    if(input.type === "file"){
+
+                        input.value = "";
+
+                    }
+                    else if(
+                        input.type === "radio" ||
+                        input.type === "checkbox"
+                    ){
+
+                        input.checked = false;
+
+                    }
+                    else{
+
+                        input.value = "";
+
+                    }
 
                 });
 
 
             /* =========================
-               Clear select boxes
+               Reset all SELECT
                ========================= */
 
             document
@@ -799,22 +827,60 @@ if(resetForm){
 
 
             /* =========================
-               Clear photo
+               Remove Education Rows
+               ========================= */
+
+            const educationList =
+                document.getElementById(
+                    "education-list"
+                );
+
+            if(educationList){
+
+                educationList.innerHTML = "";
+
+            }
+
+
+            /* =========================
+               Remove Work Rows
+               ========================= */
+
+            const workList =
+                document.getElementById(
+                    "work-list"
+                );
+
+            if(workList){
+
+                workList.innerHTML = "";
+
+            }
+
+
+            /* =========================
+               Remove Photo
                ========================= */
 
             const photoPreview =
-                document.getElementById("photoPreview");
-
-            const photoInput =
-                document.getElementById("photo");
+                document.getElementById(
+                    "photoPreview"
+                );
 
             if(photoPreview){
 
                 photoPreview.src = "";
 
-                photoPreview.style.display = "none";
+                photoPreview.style.display =
+                    "none";
 
             }
+
+
+            const photoInput =
+                document.getElementById(
+                    "photo"
+                );
 
             if(photoInput){
 
@@ -824,28 +890,88 @@ if(resetForm){
 
 
             /* =========================
-               Reinitialize birthday
+               Reset Birthday
                ========================= */
 
             initBirthday();
 
 
             /* =========================
-               Set today's resume date
+               Reset Resume Date
                ========================= */
 
             initResumeDate();
 
 
             /* =========================
-               Reset age
+               Reset Age
                ========================= */
 
             calculateAge();
 
 
+            /* =========================
+               Reset Furigana
+               ========================= */
+
+            const furigana =
+                document.getElementById(
+                    "furigana"
+                );
+
+            if(furigana){
+
+                furigana.value = "";
+
+            }
+
+
+            const addressFurigana =
+                document.getElementById(
+                    "addressFurigana"
+                );
+
+            if(addressFurigana){
+
+                addressFurigana.value = "";
+
+            }
+
+
+            const buildingFurigana =
+                document.getElementById(
+                    "buildingFurigana"
+                );
+
+            if(buildingFurigana){
+
+                buildingFurigana.value = "";
+
+            }
+
+
+            /* =========================
+               Reset Gender
+               ========================= */
+
+            const gender =
+                document.getElementById(
+                    "gender"
+                );
+
+            if(gender){
+
+                gender.selectedIndex = 0;
+
+            }
+
+
+            /* =========================
+               Final
+               ========================= */
+
             console.log(
-                "Resume form has been completely reset."
+                "Resume Maker: ALL DATA RESET"
             );
 
         }
