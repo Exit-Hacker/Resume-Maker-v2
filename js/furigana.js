@@ -18,7 +18,7 @@ let workerLoading = false;
 /* ==========================================
    Pending Conversion
    Worker loading ဖြစ်နေတုန်း
-   နောက်ဆုံး input ကို သိမ်းထားမယ်
+   input မပျောက်အောင် သိမ်းထားမယ်
    ========================================== */
 
 let pendingConversions = {};
@@ -34,6 +34,11 @@ function englishNameToKatakana(text) {
     if (!text || !text.trim()) {
         return "";
     }
+
+
+    /* ======================================
+       Normalize
+       ====================================== */
 
     const value =
         text
@@ -76,7 +81,7 @@ function englishNameToKatakana(text) {
             "メイ ミャッ",
 
         "MYO MYO":
-            "မျိုးမျိုး",
+            "ミョー ミョー",
 
         "PHYO PHYO":
             "ピョー ピョー",
@@ -92,7 +97,9 @@ function englishNameToKatakana(text) {
        ====================================== */
 
     if (dictionary[value]) {
+
         return dictionary[value];
+
     }
 
 
@@ -103,9 +110,17 @@ function englishNameToKatakana(text) {
     let result = value;
 
 
+    /* ======================================
+       Conversion Rules
+       အရှည်ဆုံး combination ကနေ
+       အတိုဆုံးကို ပြောင်းမယ်
+       ====================================== */
+
     const rules = [
 
-        /* Long combinations */
+        /* ==============================
+           Special / Long combinations
+           ============================== */
 
         ["TION", "ション"],
         ["SION", "ション"],
@@ -116,23 +131,31 @@ function englishNameToKatakana(text) {
 
         ["KYAW", "チョー"],
         ["KYI", "チー"],
-        ["KYO", "チョ"],
+        ["KYE", "チェ"],
+        ["KYO", "チョー"],
         ["KYU", "チュ"],
 
         ["MYA", "ミャ"],
-        ["MYI", "ミィ"],
+        ["MYE", "ミェ"],
+        ["MYI", "ミー"],
         ["MYO", "ミョー"],
         ["MYU", "ミュ"],
 
         ["NYA", "ニャ"],
+        ["NYE", "ニェ"],
         ["NYI", "ニー"],
         ["NYO", "ニョー"],
         ["NYU", "ニュ"],
 
         ["HLA", "ラ"],
+        ["HLE", "レ"],
         ["HLI", "リ"],
         ["HLO", "ロ"],
         ["HLU", "ル"],
+
+        /* ==============================
+           TH
+           ============================== */
 
         ["THA", "タ"],
         ["THE", "テ"],
@@ -140,11 +163,19 @@ function englishNameToKatakana(text) {
         ["THO", "ト"],
         ["THU", "トゥ"],
 
+        /* ==============================
+           HT
+           ============================== */
+
         ["HTA", "タ"],
         ["HTE", "テ"],
         ["HTI", "ティ"],
         ["HTO", "ト"],
         ["HTU", "トゥ"],
+
+        /* ==============================
+           SH
+           ============================== */
 
         ["SHA", "シャ"],
         ["SHE", "シェ"],
@@ -152,11 +183,19 @@ function englishNameToKatakana(text) {
         ["SHO", "ショ"],
         ["SHU", "シュ"],
 
+        /* ==============================
+           CH
+           ============================== */
+
         ["CHA", "チャ"],
         ["CHE", "チェ"],
         ["CHI", "チ"],
         ["CHO", "チョ"],
         ["CHU", "チュ"],
+
+        /* ==============================
+           TR
+           ============================== */
 
         ["TRA", "トラ"],
         ["TRE", "トレ"],
@@ -164,11 +203,19 @@ function englishNameToKatakana(text) {
         ["TRO", "トロ"],
         ["TRU", "トゥル"],
 
+        /* ==============================
+           DR
+           ============================== */
+
         ["DRA", "ドラ"],
         ["DRE", "ドレ"],
         ["DRI", "ドリ"],
         ["DRO", "ドロ"],
         ["DRU", "ドル"],
+
+        /* ==============================
+           Myanmar common patterns
+           ============================== */
 
         ["AUNG", "アウン"],
 
@@ -197,8 +244,9 @@ function englishNameToKatakana(text) {
         ["OA", "オア"],
         ["OE", "オー"],
 
-
-        /* Consonant combinations */
+        /* ==============================
+           Consonant combinations
+           ============================== */
 
         ["PH", "フ"],
         ["KH", "ク"],
@@ -211,8 +259,9 @@ function englishNameToKatakana(text) {
         ["CH", "チ"],
         ["NG", "ン"],
 
-
-        /* Basic vowels */
+        /* ==============================
+           Basic vowels
+           ============================== */
 
         ["A", "ア"],
         ["E", "エ"],
@@ -220,8 +269,9 @@ function englishNameToKatakana(text) {
         ["O", "オ"],
         ["U", "ウ"],
 
-
-        /* Basic consonants */
+        /* ==============================
+           Basic consonants
+           ============================== */
 
         ["B", "ブ"],
         ["C", "ク"],
@@ -249,33 +299,44 @@ function englishNameToKatakana(text) {
 
 
     /* ======================================
-       Word by word conversion
-       Space ကို ထိန်းထားမယ်
+       Word by Word Conversion
+
+       Space ကို မပျောက်စေဘူး
        ====================================== */
 
-    const words = value.split(" ");
+    const words =
+        value.split(" ");
 
 
-    const convertedWords = words.map(function(word) {
+    const convertedWords =
+        words.map(function(word) {
 
-        let converted = word;
-
-
-        for (const rule of rules) {
-
-            converted =
-                converted.replaceAll(
-                    rule[0],
-                    rule[1]
-                );
-
-        }
+            let converted =
+                word;
 
 
-        return converted;
+            for (const rule of rules) {
 
-    });
+                converted =
+                    converted.replaceAll(
+                        rule[0],
+                        rule[1]
+                    );
 
+            }
+
+
+            return converted;
+
+        });
+
+
+    /* ======================================
+       Final Cleanup
+
+       ・ မသုံးဘူး
+       Space ပဲသုံးမယ်
+       ====================================== */
 
     result =
         convertedWords
@@ -299,6 +360,7 @@ function isEnglishText(text) {
     if (!text || !text.trim()) {
         return false;
     }
+
 
     return /^[A-Za-z0-9\s.'-]+$/.test(
         text.trim()
@@ -372,7 +434,8 @@ function createFuriganaWorker() {
                             }
 
 
-                            tokenizer = instance;
+                            tokenizer =
+                                instance;
 
 
                             self.postMessage({
@@ -454,9 +517,9 @@ function createFuriganaWorker() {
                                     token.surface_form || "";
 
 
-                                /*
-                                 * English / numbers
-                                 */
+                                /* ==========================
+                                   English / numbers
+                                   ========================== */
 
                                 if (
                                     /^[0-9A-Za-z\\s.'-]+$/.test(
@@ -558,11 +621,9 @@ function createFuriganaWorker() {
                 );
 
 
-                /*
-                 * Worker loading အတွင်း
-                 * ရိုက်ထားတဲ့ input တွေကို
-                 * ပြန် convert လုပ်မယ်
-                 */
+                /* ==============================
+                   Pending conversion
+                   ============================== */
 
                 Object.keys(
                     pendingConversions
@@ -572,6 +633,7 @@ function createFuriganaWorker() {
                         pendingConversions[
                             sourceId
                         ];
+
 
                     convertFurigana(
                         sourceId,
@@ -585,11 +647,12 @@ function createFuriganaWorker() {
 
 
                 return;
+
             }
 
 
             /* ==============================
-               Result
+               Conversion Result
                ============================== */
 
             if (data.type === "result") {
@@ -657,7 +720,8 @@ function createFuriganaWorker() {
 
     furiganaWorker.postMessage({
 
-        type: "load"
+        type:
+            "load"
 
     });
 
@@ -736,7 +800,7 @@ function convertFurigana(
 
 
     /* ==================================
-       Start Worker
+       Japanese → Kuromoji
        ================================== */
 
     if (!furiganaWorker) {
@@ -770,7 +834,7 @@ function convertFurigana(
 
 
     /* ==================================
-       Japanese → Kuromoji
+       Convert
        ================================== */
 
     furiganaWorker.postMessage({
@@ -790,6 +854,33 @@ function convertFurigana(
 
 
 /* ==========================================
+   Convert All Existing Values
+   Browser Auto-Fill Support
+   ========================================== */
+
+function convertAllExistingValues() {
+
+    convertFurigana(
+        "name",
+        "furigana"
+    );
+
+
+    convertFurigana(
+        "address",
+        "addressFurigana"
+    );
+
+
+    convertFurigana(
+        "building",
+        "buildingFurigana"
+    );
+
+}
+
+
+/* ==========================================
    DOM Ready
    ========================================== */
 
@@ -797,6 +888,10 @@ document.addEventListener(
     "DOMContentLoaded",
     function() {
 
+
+        /* ==================================
+           Get Elements
+           ================================== */
 
         const name =
             document.getElementById(
@@ -817,7 +912,7 @@ document.addEventListener(
 
 
         /* ==================================
-           Name
+           Name Input
            ================================== */
 
         if (name) {
@@ -838,7 +933,7 @@ document.addEventListener(
 
 
         /* ==================================
-           Address
+           Address Input
            ================================== */
 
         if (address) {
@@ -859,7 +954,7 @@ document.addEventListener(
 
 
         /* ==================================
-           Building
+           Building Input
            ================================== */
 
         if (building) {
@@ -881,10 +976,6 @@ document.addEventListener(
 
         /* ==================================
            Start Kuromoji
-
-           500ms နောက်မှ load
-           Web Worker သုံးထားလို့
-           main page မ freeze ဖြစ်ဘူး
            ================================== */
 
         setTimeout(
@@ -895,6 +986,42 @@ document.addEventListener(
             },
             500
         );
+
+
+        /* ==================================
+           Browser Auto-Fill Support
+           
+           Browser က input value ကို
+           auto-fill လုပ်ပြီးသားဖြစ်နိုင်လို့
+           1 sec နောက်မှာ ပြန်စစ်မယ်
+           ================================== */
+
+        setTimeout(
+            function() {
+
+                convertAllExistingValues();
+
+            },
+            1000
+        );
+
+
+        /* ==================================
+           Extra Auto-Fill Check
+           
+           Browser autofill က နောက်ကျနိုင်လို့
+           2 sec နောက်တစ်ခါ ထပ်စစ်မယ်
+           ================================== */
+
+        setTimeout(
+            function() {
+
+                convertAllExistingValues();
+
+            },
+            2000
+        );
+
 
     }
 );
