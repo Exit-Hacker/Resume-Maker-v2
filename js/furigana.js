@@ -8,183 +8,153 @@ let furiganaWorker = null;
 let workerReady = false;
 let workerLoading = false;
 
-let latestName = "";
-let latestBuilding = "";
-
 
 /* ==========================================
-   Create Worker
+   Create Kuromoji Worker
    ========================================== */
 
-function createFuriganaWorker(){
+function createFuriganaWorker() {
 
-    if(furiganaWorker || workerLoading){
+    if (furiganaWorker || workerLoading) {
         return;
     }
 
     workerLoading = true;
 
-
     const workerCode = `
 
         let tokenizer = null;
 
-
-        self.onmessage = function(event){
+        self.onmessage = function(event) {
 
             const data = event.data;
-
 
             /* ==============================
                Load Kuromoji
                ============================== */
 
-            if(data.type === "load"){
+            if (data.type === "load") {
 
-                try{
+                try {
 
                     importScripts(
                         "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"
                     );
 
+                    kuromoji.builder({
 
-                    kuromoji
-                        .builder({
+                        dicPath:
+                            "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
 
-                            dicPath:
-                                "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
+                    }).build(function(error, instance) {
 
-                        })
-                        .build(
+                        if (error) {
 
-                            function(error, instance){
+                            self.postMessage({
+                                type: "error",
+                                message:
+                                    error.message ||
+                                    "Kuromoji loading failed."
+                            });
 
-                                if(error){
+                            return;
+                        }
 
-                                    self.postMessage({
+                        tokenizer = instance;
 
-                                        type: "error",
-
-                                        message:
-                                            "Kuromoji loading failed."
-
-                                    });
-
-                                    return;
-
-                                }
-
-
-                                tokenizer = instance;
-
-
-                                self.postMessage({
-
-                                    type: "ready"
-
-                                });
-
-                            }
-
-                        );
-
-                }
-                catch(error){
-
-                    self.postMessage({
-
-                        type: "error",
-
-                        message:
-                            error.message ||
-                            "Kuromoji error."
+                        self.postMessage({
+                            type: "ready"
+                        });
 
                     });
 
                 }
+                catch (error) {
 
+                    self.postMessage({
+                        type: "error",
+                        message:
+                            error.message ||
+                            "Kuromoji error."
+                    });
+
+                }
+
+                return;
             }
 
 
             /* ==============================
-               Convert
+               Convert text
                ============================== */
 
-            if(data.type === "convert"){
+            if (data.type === "convert") {
 
-                if(!tokenizer){
-
+                if (!tokenizer) {
                     return;
-
                 }
-
 
                 const text =
                     data.text || "";
 
-
-                if(!text.trim()){
+                if (!text.trim()) {
 
                     self.postMessage({
-
-                        type: data.target,
-
+                        type: "result",
+                        target: data.target,
                         text: ""
-
                     });
 
                     return;
-
                 }
 
-
-                try{
+                try {
 
                     const tokens =
                         tokenizer.tokenize(text);
 
-
                     const result =
-                        tokens
-                            .map(function(token){
+                        tokens.map(function(token) {
 
-                                /*
-                                 * Keep numbers and
-                                 * English characters.
-                                 */
+                            /*
+                             * Keep numbers,
+                             * English and symbols.
+                             */
 
-                                if(
-                                    /^[0-9A-Za-z\s\-]+$/
-                                        .test(
-                                            token.surface_form
-                                        )
-                                ){
+                            if (
+                                /^[0-9A-Za-z\s\-]+$/
+                                    .test(
+                                        token.surface_form
+                                    )
+                            ) {
 
-                                    return token.surface_form;
+                                return token.surface_form;
 
-                                }
+                            }
 
+                            return (
+                                token.reading ||
+                                token.surface_form ||
+                                ""
+                            );
 
-                                return (
-                                    token.reading ||
-                                    token.surface_form ||
-                                    ""
-                                );
-
-                            })
-                            .join("");
+                        }).join("");
 
 
                     self.postMessage({
 
-                        type: data.target,
+                        type: "result",
 
-                        text: result
+                        target:
+                            data.target,
+
+                        text:
+                            result
 
                     });
 
                 }
-                catch(error){
+                catch (error) {
 
                     self.postMessage({
 
@@ -228,7 +198,7 @@ function createFuriganaWorker(){
        ========================================== */
 
     furiganaWorker.onmessage =
-        function(event){
+        function(event) {
 
             const data =
                 event.data;
@@ -238,78 +208,39 @@ function createFuriganaWorker(){
                Ready
                ============================== */
 
-            if(data.type === "ready"){
+            if (data.type === "ready") {
 
                 workerReady = true;
                 workerLoading = false;
-
 
                 console.log(
                     "Kuromoji Worker ready."
                 );
 
-
-                if(latestName){
-
-                    convertName(
-                        latestName
-                    );
-
-                }
-
-
-                if(latestBuilding){
-
-                    convertBuilding(
-                        latestBuilding
-                    );
-
-                }
-
+                return;
             }
 
 
             /* ==============================
-               Name Result
+               Result
                ============================== */
 
-            if(data.type === "name-result"){
+            if (data.type === "result") {
 
-                const furigana =
+                const target =
                     document.getElementById(
-                        "furigana"
+                        data.target
                     );
 
 
-                if(furigana){
+                if (target) {
 
-                    furigana.value =
+                    target.value =
                         data.text || "";
 
                 }
 
-            }
-
-
-            /* ==============================
-               Building Result
-               ============================== */
-
-            if(data.type === "building-result"){
-
-                const buildingFurigana =
-                    document.getElementById(
-                        "buildingFurigana"
-                    );
-
-
-                if(buildingFurigana){
-
-                    buildingFurigana.value =
-                        data.text || "";
-
-                }
-
+                return;
             }
 
 
@@ -317,10 +248,10 @@ function createFuriganaWorker(){
                Error
                ============================== */
 
-            if(data.type === "error"){
+            if (data.type === "error") {
 
                 console.error(
-                    "Kuromoji Worker:",
+                    "Kuromoji:",
                     data.message
                 );
 
@@ -336,11 +267,10 @@ function createFuriganaWorker(){
        ========================================== */
 
     furiganaWorker.onerror =
-        function(error){
+        function(error) {
 
             workerReady = false;
             workerLoading = false;
-
 
             console.error(
                 "Furigana Worker Error:",
@@ -364,97 +294,82 @@ function createFuriganaWorker(){
 
 
 /* ==========================================
-   Convert Name
+   Convert Field
    ========================================== */
 
-function convertName(text){
+function convertFurigana(
+    sourceId,
+    targetId
+) {
 
-    latestName =
-        text || "";
+    const source =
+        document.getElementById(
+            sourceId
+        );
+
+    const target =
+        document.getElementById(
+            targetId
+        );
 
 
-    if(!latestName.trim()){
-
-        const furigana =
-            document.getElementById(
-                "furigana"
-            );
-
-
-        if(furigana){
-
-            furigana.value = "";
-
-        }
-
+    if (!source || !target) {
         return;
-
     }
 
 
-    if(!workerReady){
+    const text =
+        source.value;
+
+
+    /* ==============================
+       Empty
+       ============================== */
+
+    if (!text.trim()) {
+
+        target.value = "";
 
         return;
-
     }
 
+
+    /* ==============================
+       Start Worker
+       ============================== */
+
+    if (!furiganaWorker) {
+
+        createFuriganaWorker();
+
+        return;
+    }
+
+
+    /* ==============================
+       Worker loading
+       ============================== */
+
+    if (!workerReady) {
+
+        return;
+    }
+
+
+    /* ==============================
+       Convert
+       ============================== */
 
     furiganaWorker.postMessage({
 
-        type: "convert",
+        type:
+            "convert",
 
-        target: "name-result",
+        target:
+            targetId,
 
-        text: latestName
-
-    });
-
-}
-
-
-/* ==========================================
-   Convert Building
-   ========================================== */
-
-function convertBuilding(text){
-
-    latestBuilding =
-        text || "";
-
-
-    if(!latestBuilding.trim()){
-
-        const buildingFurigana =
-            document.getElementById(
-                "buildingFurigana"
-            );
-
-
-        if(buildingFurigana){
-
-            buildingFurigana.value = "";
-
-        }
-
-        return;
-
-    }
-
-
-    if(!workerReady){
-
-        return;
-
-    }
-
-
-    furiganaWorker.postMessage({
-
-        type: "convert",
-
-        target: "building-result",
-
-        text: latestBuilding
+        text:
+            text
 
     });
 
@@ -467,19 +382,17 @@ function convertBuilding(text){
 
 document.addEventListener(
     "DOMContentLoaded",
-    function(){
+    function() {
 
         const name =
             document.getElementById(
                 "name"
             );
 
-
-        const furigana =
+        const address =
             document.getElementById(
-                "furigana"
+                "address"
             );
-
 
         const building =
             document.getElementById(
@@ -487,67 +400,20 @@ document.addEventListener(
             );
 
 
-        const buildingFurigana =
-            document.getElementById(
-                "buildingFurigana"
-            );
-
-
         /* ==================================
-           No required fields
+           Name
            ================================== */
 
-        if(
-            !name &&
-            !building
-        ){
-
-            return;
-
-        }
-
-
-        /* ==================================
-           Name Input
-           ================================== */
-
-        if(name){
+        if (name) {
 
             name.addEventListener(
                 "input",
-                function(){
+                function() {
 
-                    latestName =
-                        name.value;
-
-
-                    if(
-                        !latestName.trim()
-                    ){
-
-                        if(furigana){
-
-                            furigana.value = "";
-
-                        }
-
-                        return;
-
-                    }
-
-
-                    if(workerReady){
-
-                        convertName(
-                            latestName
-                        );
-
-                    }
-                    else if(!workerLoading){
-
-                        createFuriganaWorker();
-
-                    }
+                    convertFurigana(
+                        "name",
+                        "furigana"
+                    );
 
                 }
             );
@@ -556,51 +422,65 @@ document.addEventListener(
 
 
         /* ==================================
-           Building Input
+           Address
            ================================== */
 
-        if(building){
+        if (address) {
 
-            building.addEventListener(
+            address.addEventListener(
                 "input",
-                function(){
+                function() {
 
-                    latestBuilding =
-                        building.value;
-
-
-                    if(
-                        !latestBuilding.trim()
-                    ){
-
-                        if(buildingFurigana){
-
-                            buildingFurigana.value = "";
-
-                        }
-
-                        return;
-
-                    }
-
-
-                    if(workerReady){
-
-                        convertBuilding(
-                            latestBuilding
-                        );
-
-                    }
-                    else if(!workerLoading){
-
-                        createFuriganaWorker();
-
-                    }
+                    convertFurigana(
+                        "address",
+                        "addressFurigana"
+                    );
 
                 }
             );
 
         }
+
+
+        /* ==================================
+           Building
+           ================================== */
+
+        if (building) {
+
+            building.addEventListener(
+                "input",
+                function() {
+
+                    convertFurigana(
+                        "building",
+                        "buildingFurigana"
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* ==================================
+           Start Kuromoji
+           ================================== */
+
+        /*
+         * Start after page is ready.
+         * Worker prevents the main page
+         * from freezing.
+         */
+
+        setTimeout(
+            function() {
+
+                createFuriganaWorker();
+
+            },
+            500
+        );
 
     }
 );
