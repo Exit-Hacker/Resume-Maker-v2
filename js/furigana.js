@@ -1,180 +1,384 @@
 /* ==========================================
+   Resume Maker v2
    Furigana Auto
-   Lazy Kuromoji Loading
+   Web Worker Version
    ========================================== */
 
-let tokenizer = null;
-let tokenizerLoading = false;
-let tokenizerReady = false;
+let furiganaWorker = null;
+let workerReady = false;
+let workerLoading = false;
 
 
 /* ==========================================
-   Load Kuromoji in background
+   Create Worker
    ========================================== */
 
-function loadKuromoji(){
+function createFuriganaWorker(){
 
-    if(tokenizerReady || tokenizerLoading){
+    if(furiganaWorker || workerLoading){
+
         return;
+
     }
 
-    if(typeof kuromoji === "undefined"){
-        console.error("Kuromoji.js is not loaded.");
-        return;
-    }
+    workerLoading = true;
 
-    tokenizerLoading = true;
 
-    kuromoji.builder({
+    const workerCode = `
 
-        dicPath:
-            "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
+        let tokenizer = null;
 
-    }).build((error, instance) => {
+        self.onmessage = function(event){
 
-        tokenizerLoading = false;
+            const data = event.data;
 
-        if(error){
+
+            /* =========================
+               Load Kuromoji
+               ========================= */
+
+            if(data.type === "load"){
+
+                importScripts(
+                    "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"
+                );
+
+
+                kuromoji.builder({
+
+                    dicPath:
+                        "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
+
+                }).build(
+                    function(error, instance){
+
+                        if(error){
+
+                            self.postMessage({
+
+                                type: "error",
+
+                                message:
+                                    error.message ||
+                                    "Kuromoji loading failed."
+
+                            });
+
+                            return;
+
+                        }
+
+
+                        tokenizer = instance;
+
+
+                        self.postMessage({
+
+                            type: "ready"
+
+                        });
+
+                    }
+                );
+
+            }
+
+
+            /* =========================
+               Convert
+               ========================= */
+
+            if(data.type === "convert"){
+
+                if(!tokenizer){
+
+                    self.postMessage({
+
+                        type: "error",
+
+                        message:
+                            "Tokenizer is not ready."
+
+                    });
+
+                    return;
+
+                }
+
+
+                const text =
+                    data.text || "";
+
+
+                if(!text.trim()){
+
+                    self.postMessage({
+
+                        type: "result",
+
+                        text: ""
+
+                    });
+
+                    return;
+
+                }
+
+
+                const tokens =
+                    tokenizer.tokenize(text);
+
+
+                const result =
+                    tokens
+                        .map(token => {
+
+                            return (
+                                token.reading ||
+                                token.surface_form ||
+                                ""
+                            );
+
+                        })
+                        .join("");
+
+
+                self.postMessage({
+
+                    type: "result",
+
+                    text: result
+
+                });
+
+            }
+
+        };
+
+    `;
+
+
+    const blob =
+        new Blob(
+            [workerCode],
+            {
+                type:
+                    "application/javascript"
+            }
+        );
+
+
+    const workerURL =
+        URL.createObjectURL(blob);
+
+
+    furiganaWorker =
+        new Worker(workerURL);
+
+
+    furiganaWorker.onmessage =
+        function(event){
+
+            const data =
+                event.data;
+
+
+            /* =========================
+               Worker Ready
+               ========================= */
+
+            if(data.type === "ready"){
+
+                workerReady = true;
+                workerLoading = false;
+
+
+                console.log(
+                    "Furigana Worker ready."
+                );
+
+
+                convertCurrentName();
+
+            }
+
+
+            /* =========================
+               Conversion Result
+               ========================= */
+
+            if(data.type === "result"){
+
+                const furigana =
+                    document.getElementById(
+                        "furigana"
+                    );
+
+
+                if(furigana){
+
+                    furigana.value =
+                        data.text;
+
+                }
+
+            }
+
+
+            /* =========================
+               Error
+               ========================= */
+
+            if(data.type === "error"){
+
+                workerLoading = false;
+
+
+                console.error(
+                    "Furigana Worker:",
+                    data.message
+                );
+
+            }
+
+        };
+
+
+    furiganaWorker.onerror =
+        function(error){
+
+            workerLoading = false;
 
             console.error(
-                "Kuromoji loading failed:",
+                "Furigana Worker error:",
                 error
             );
 
-            return;
-        }
+        };
 
-        tokenizer = instance;
-        tokenizerReady = true;
 
-        console.log("Kuromoji ready.");
+    /* =========================
+       Start Kuromoji
+       ========================= */
 
-        autoFurigana();
+    furiganaWorker.postMessage({
+
+        type: "load"
 
     });
+
 }
 
 
 /* ==========================================
-   Convert text to Katakana
+   Convert Current Name
    ========================================== */
 
-function convertToKatakana(text){
-
-    if(!tokenizer || !text){
-
-        return "";
-
-    }
-
-    const tokens =
-        tokenizer.tokenize(text);
-
-    return tokens
-        .map(token => {
-
-            return (
-                token.reading ||
-                token.surface_form ||
-                ""
-            );
-
-        })
-        .join("");
-}
-
-
-/* ==========================================
-   Name → Furigana
-   ========================================== */
-
-function autoFurigana(){
+function convertCurrentName(){
 
     const name =
-        document.getElementById("name");
+        document.getElementById(
+            "name"
+        );
 
-    const furigana =
-        document.getElementById("furigana");
 
-    if(!name || !furigana){
+    if(!name){
 
         return;
+
     }
+
 
     if(!name.value.trim()){
 
         return;
-    }
-
-    if(!tokenizerReady){
-
-        return;
-    }
-
-    const result =
-        convertToKatakana(
-            name.value
-        );
-
-    if(result){
-
-        furigana.value = result;
 
     }
+
+
+    convertToFurigana(
+        name.value
+    );
+
 }
 
 
 /* ==========================================
-   Start background loading
+   Convert Name
    ========================================== */
 
-// window.addEventListener(
-//     "load",
-//     () => {
+function convertToFurigana(text){
 
-//         /*
-//          * Wait a little after page load.
-//          * This prevents the form from freezing.
-//          */
+    if(!furiganaWorker){
 
-//         setTimeout(() => {
+        createFuriganaWorker();
 
-//             loadKuromoji();
+    }
 
-//         }, 1500);
 
-//     }
-// );
+    if(!workerReady){
+
+        return;
+
+    }
+
+
+    furiganaWorker.postMessage({
+
+        type: "convert",
+
+        text: text
+
+    });
+
+}
 
 
 /* ==========================================
-   Name input
+   Initialize
    ========================================== */
 
 document.addEventListener(
     "DOMContentLoaded",
-    () => {
+    function(){
 
         const name =
-            document.getElementById("name");
+            document.getElementById(
+                "name"
+            );
 
-        if(!name){
+
+        const furigana =
+            document.getElementById(
+                "furigana"
+            );
+
+
+        if(!name || !furigana){
 
             return;
+
         }
+
+
+        /* =========================
+           Name Input
+           ========================= */
 
         name.addEventListener(
             "input",
-            () => {
+            function(){
 
                 /*
-                 * If Kuromoji is already ready,
-                 * update immediately.
+                 * Do NOT load Kuromoji
+                 * on every keystroke.
                  */
 
-                if(tokenizerReady){
+                if(workerReady){
 
-                    autoFurigana();
+                    convertToFurigana(
+                        name.value
+                    );
 
                 }
 
@@ -182,25 +386,22 @@ document.addEventListener(
         );
 
 
-        name.addEventListener(
-            "blur",
-            () => {
+        /* =========================
+           Start Worker
+           ========================= */
 
-                /*
-                 * If tokenizer hasn't loaded yet,
-                 * start it now.
-                 */
+        /*
+         * Start after the page is ready,
+         * but do not block the main UI.
+         */
 
-                if(!tokenizerReady){
+        setTimeout(
+            function(){
 
-                    loadKuromoji();
+                createFuriganaWorker();
 
-                    return;
-                }
-
-                autoFurigana();
-
-            }
+            },
+            100
         );
 
     }
