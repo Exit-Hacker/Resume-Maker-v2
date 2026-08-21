@@ -128,23 +128,23 @@ function autoFurigana(){
    Start background loading
    ========================================== */
 
-window.addEventListener(
-    "load",
-    () => {
+// window.addEventListener(
+//     "load",
+//     () => {
 
-        /*
-         * Wait a little after page load.
-         * This prevents the form from freezing.
-         */
+//         /*
+//          * Wait a little after page load.
+//          * This prevents the form from freezing.
+//          */
 
-        setTimeout(() => {
+//         setTimeout(() => {
 
-            loadKuromoji();
+//             loadKuromoji();
 
-        }, 1500);
+//         }, 1500);
 
-    }
-);
+//     }
+// );
 
 
 /* ==========================================
