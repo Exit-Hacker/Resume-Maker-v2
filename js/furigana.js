@@ -3,6 +3,12 @@
    Furigana Auto
    Japanese / English → Katakana
    Kuromoji + Web Worker
+
+   IMPORTANT:
+   - index.html မပြင်ရ
+   - Name / Address / Building အကုန် support
+   - 「・」 ကို space အဖြစ်ပြောင်း
+   - Worker loading အတွင်း input မပျောက်
    ========================================== */
 
 
@@ -17,11 +23,11 @@ let workerLoading = false;
 
 /* ==========================================
    Pending Conversion
-   Worker loading ဖြစ်နေတုန်း
-   input မပျောက်အောင် သိမ်းထားမယ်
+   Worker မ ready ဖြစ်သေးရင်
+   နောက်ဆုံး input ကို သိမ်းထားမယ်
    ========================================== */
 
-let pendingConversions = {};
+const pendingConversions = {};
 
 
 /* ==========================================
@@ -34,11 +40,6 @@ function englishNameToKatakana(text) {
     if (!text || !text.trim()) {
         return "";
     }
-
-
-    /* ======================================
-       Normalize
-       ====================================== */
 
     const value =
         text
@@ -97,9 +98,7 @@ function englishNameToKatakana(text) {
        ====================================== */
 
     if (dictionary[value]) {
-
         return dictionary[value];
-
     }
 
 
@@ -107,20 +106,9 @@ function englishNameToKatakana(text) {
        Generic English → Katakana
        ====================================== */
 
-    let result = value;
-
-
-    /* ======================================
-       Conversion Rules
-       အရှည်ဆုံး combination ကနေ
-       အတိုဆုံးကို ပြောင်းမယ်
-       ====================================== */
-
     const rules = [
 
-        /* ==============================
-           Special / Long combinations
-           ============================== */
+        /* Long combinations */
 
         ["TION", "ション"],
         ["SION", "ション"],
@@ -131,31 +119,23 @@ function englishNameToKatakana(text) {
 
         ["KYAW", "チョー"],
         ["KYI", "チー"],
-        ["KYE", "チェ"],
-        ["KYO", "チョー"],
+        ["KYO", "チョ"],
         ["KYU", "チュ"],
 
         ["MYA", "ミャ"],
-        ["MYE", "ミェ"],
-        ["MYI", "ミー"],
+        ["MYI", "ミィ"],
         ["MYO", "ミョー"],
         ["MYU", "ミュ"],
 
         ["NYA", "ニャ"],
-        ["NYE", "ニェ"],
         ["NYI", "ニー"],
         ["NYO", "ニョー"],
         ["NYU", "ニュ"],
 
         ["HLA", "ラ"],
-        ["HLE", "レ"],
         ["HLI", "リ"],
         ["HLO", "ロ"],
         ["HLU", "ル"],
-
-        /* ==============================
-           TH
-           ============================== */
 
         ["THA", "タ"],
         ["THE", "テ"],
@@ -163,19 +143,11 @@ function englishNameToKatakana(text) {
         ["THO", "ト"],
         ["THU", "トゥ"],
 
-        /* ==============================
-           HT
-           ============================== */
-
         ["HTA", "タ"],
         ["HTE", "テ"],
         ["HTI", "ティ"],
         ["HTO", "ト"],
         ["HTU", "トゥ"],
-
-        /* ==============================
-           SH
-           ============================== */
 
         ["SHA", "シャ"],
         ["SHE", "シェ"],
@@ -183,19 +155,11 @@ function englishNameToKatakana(text) {
         ["SHO", "ショ"],
         ["SHU", "シュ"],
 
-        /* ==============================
-           CH
-           ============================== */
-
         ["CHA", "チャ"],
         ["CHE", "チェ"],
         ["CHI", "チ"],
         ["CHO", "チョ"],
         ["CHU", "チュ"],
-
-        /* ==============================
-           TR
-           ============================== */
 
         ["TRA", "トラ"],
         ["TRE", "トレ"],
@@ -203,19 +167,11 @@ function englishNameToKatakana(text) {
         ["TRO", "トロ"],
         ["TRU", "トゥル"],
 
-        /* ==============================
-           DR
-           ============================== */
-
         ["DRA", "ドラ"],
         ["DRE", "ドレ"],
         ["DRI", "ドリ"],
         ["DRO", "ドロ"],
         ["DRU", "ドル"],
-
-        /* ==============================
-           Myanmar common patterns
-           ============================== */
 
         ["AUNG", "アウン"],
 
@@ -244,9 +200,7 @@ function englishNameToKatakana(text) {
         ["OA", "オア"],
         ["OE", "オー"],
 
-        /* ==============================
-           Consonant combinations
-           ============================== */
+        /* Consonant combinations */
 
         ["PH", "フ"],
         ["KH", "ク"],
@@ -259,9 +213,7 @@ function englishNameToKatakana(text) {
         ["CH", "チ"],
         ["NG", "ン"],
 
-        /* ==============================
-           Basic vowels
-           ============================== */
+        /* Basic vowels */
 
         ["A", "ア"],
         ["E", "エ"],
@@ -269,9 +221,7 @@ function englishNameToKatakana(text) {
         ["O", "オ"],
         ["U", "ウ"],
 
-        /* ==============================
-           Basic consonants
-           ============================== */
+        /* Basic consonants */
 
         ["B", "ブ"],
         ["C", "ク"],
@@ -299,55 +249,36 @@ function englishNameToKatakana(text) {
 
 
     /* ======================================
-       Word by Word Conversion
-
+       Word by Word
        Space ကို မပျောက်စေဘူး
        ====================================== */
 
-    const words =
-        value.split(" ");
+    const words = value.split(" ");
+
+    const convertedWords = words.map(function(word) {
+
+        let converted = word;
+
+        for (const rule of rules) {
+
+            converted =
+                converted.replaceAll(
+                    rule[0],
+                    rule[1]
+                );
+
+        }
+
+        return converted;
+
+    });
 
 
-    const convertedWords =
-        words.map(function(word) {
-
-            let converted =
-                word;
-
-
-            for (const rule of rules) {
-
-                converted =
-                    converted.replaceAll(
-                        rule[0],
-                        rule[1]
-                    );
-
-            }
-
-
-            return converted;
-
-        });
-
-
-    /* ======================================
-       Final Cleanup
-
-       ・ မသုံးဘူး
-       Space ပဲသုံးမယ်
-       ====================================== */
-
-    result =
-        convertedWords
-            .join(" ")
-            .replace(/・/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-
-
-    return result;
-
+    return convertedWords
+        .join(" ")
+        .replace(/・+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
 
@@ -361,11 +292,9 @@ function isEnglishText(text) {
         return false;
     }
 
-
     return /^[A-Za-z0-9\s.'-]+$/.test(
         text.trim()
     );
-
 }
 
 
@@ -375,13 +304,9 @@ function isEnglishText(text) {
 
 function createFuriganaWorker() {
 
-    if (
-        furiganaWorker ||
-        workerLoading
-    ) {
+    if (furiganaWorker || workerLoading) {
         return;
     }
-
 
     workerLoading = true;
 
@@ -414,39 +339,34 @@ function createFuriganaWorker() {
                         dicPath:
                             "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
 
-                    }).build(
+                    }).build(function(error, instance) {
 
-                        function(error, instance) {
-
-                            if (error) {
-
-                                self.postMessage({
-
-                                    type: "error",
-
-                                    message:
-                                        error.message ||
-                                        "Kuromoji loading failed."
-
-                                });
-
-                                return;
-                            }
-
-
-                            tokenizer =
-                                instance;
-
+                        if (error) {
 
                             self.postMessage({
 
-                                type: "ready"
+                                type: "error",
+
+                                message:
+                                    error.message ||
+                                    "Kuromoji loading failed."
 
                             });
 
+                            return;
                         }
 
-                    );
+
+                        tokenizer = instance;
+
+
+                        self.postMessage({
+
+                            type: "ready"
+
+                        });
+
+                    });
 
                 }
 
@@ -464,14 +384,12 @@ function createFuriganaWorker() {
 
                 }
 
-
                 return;
-
             }
 
 
             /* ==================================
-               Japanese → Katakana
+               Convert
                ================================== */
 
             if (data.type === "convert") {
@@ -499,7 +417,6 @@ function createFuriganaWorker() {
                     });
 
                     return;
-
                 }
 
 
@@ -518,7 +435,7 @@ function createFuriganaWorker() {
 
 
                                 /* ==========================
-                                   English / numbers
+                                   Keep English / Numbers
                                    ========================== */
 
                                 if (
@@ -621,33 +538,60 @@ function createFuriganaWorker() {
                 );
 
 
-                /* ==============================
-                   Pending conversion
-                   ============================== */
+                /* ==========================
+                   Process pending input
+                   ========================== */
 
                 Object.keys(
                     pendingConversions
                 ).forEach(function(sourceId) {
 
-                    const targetId =
+                    const item =
                         pendingConversions[
                             sourceId
                         ];
 
 
+                    if (!item) {
+                        return;
+                    }
+
+
+                    const source =
+                        document.getElementById(
+                            sourceId
+                        );
+
+
+                    if (!source) {
+                        return;
+                    }
+
+
+                    /*
+                     * User ရိုက်ပြီးသား
+                     * နောက်ဆုံး value ကိုပဲ
+                     * convert လုပ်မယ်
+                     */
+
                     convertFurigana(
                         sourceId,
-                        targetId
+                        item.targetId
                     );
 
                 });
 
 
-                pendingConversions = {};
+                Object.keys(
+                    pendingConversions
+                ).forEach(function(key) {
+
+                    delete pendingConversions[key];
+
+                });
 
 
                 return;
-
             }
 
 
@@ -665,14 +609,20 @@ function createFuriganaWorker() {
 
                 if (target) {
 
+                    /*
+                     * Japanese Kuromoji result
+                     * မှာ ・ ပါရင် space ပြောင်း
+                     */
+
                     target.value =
-                        data.text || "";
+                        (data.text || "")
+                            .replace(/・+/g, " ")
+                            .replace(/\s+/g, " ")
+                            .trim();
 
                 }
 
-
                 return;
-
             }
 
 
@@ -686,7 +636,6 @@ function createFuriganaWorker() {
                     "Kuromoji:",
                     data.message
                 );
-
 
                 workerLoading = false;
 
@@ -705,7 +654,6 @@ function createFuriganaWorker() {
             workerReady = false;
             workerLoading = false;
 
-
             console.error(
                 "Furigana Worker Error:",
                 error
@@ -720,11 +668,9 @@ function createFuriganaWorker() {
 
     furiganaWorker.postMessage({
 
-        type:
-            "load"
+        type: "load"
 
     });
-
 }
 
 
@@ -749,13 +695,8 @@ function convertFurigana(
         );
 
 
-    if (
-        !source ||
-        !target
-    ) {
-
+    if (!source || !target) {
         return;
-
     }
 
 
@@ -772,7 +713,6 @@ function convertFurigana(
         target.value = "";
 
         return;
-
     }
 
 
@@ -780,14 +720,10 @@ function convertFurigana(
        English → Katakana
        ================================== */
 
-    if (
-        isEnglishText(text)
-    ) {
+    if (isEnglishText(text)) {
 
         const result =
-            englishNameToKatakana(
-                text
-            );
+            englishNameToKatakana(text);
 
 
         target.value =
@@ -795,25 +731,26 @@ function convertFurigana(
 
 
         return;
-
     }
 
 
     /* ==================================
-       Japanese → Kuromoji
+       Worker မရှိသေးရင်
+       pending ထဲသိမ်း
        ================================== */
 
     if (!furiganaWorker) {
 
         pendingConversions[
             sourceId
-        ] = targetId;
+        ] = {
+            targetId: targetId
+        };
 
 
         createFuriganaWorker();
 
         return;
-
     }
 
 
@@ -825,16 +762,17 @@ function convertFurigana(
 
         pendingConversions[
             sourceId
-        ] = targetId;
+        ] = {
+            targetId: targetId
+        };
 
 
         return;
-
     }
 
 
     /* ==================================
-       Convert
+       Japanese → Kuromoji
        ================================== */
 
     furiganaWorker.postMessage({
@@ -849,34 +787,6 @@ function convertFurigana(
             text
 
     });
-
-}
-
-
-/* ==========================================
-   Convert All Existing Values
-   Browser Auto-Fill Support
-   ========================================== */
-
-function convertAllExistingValues() {
-
-    convertFurigana(
-        "name",
-        "furigana"
-    );
-
-
-    convertFurigana(
-        "address",
-        "addressFurigana"
-    );
-
-
-    convertFurigana(
-        "building",
-        "buildingFurigana"
-    );
-
 }
 
 
@@ -887,11 +797,6 @@ function convertAllExistingValues() {
 document.addEventListener(
     "DOMContentLoaded",
     function() {
-
-
-        /* ==================================
-           Get Elements
-           ================================== */
 
         const name =
             document.getElementById(
@@ -912,7 +817,7 @@ document.addEventListener(
 
 
         /* ==================================
-           Name Input
+           Name
            ================================== */
 
         if (name) {
@@ -933,7 +838,7 @@ document.addEventListener(
 
 
         /* ==================================
-           Address Input
+           Address
            ================================== */
 
         if (address) {
@@ -954,7 +859,7 @@ document.addEventListener(
 
 
         /* ==================================
-           Building Input
+           Building
            ================================== */
 
         if (building) {
@@ -975,7 +880,7 @@ document.addEventListener(
 
 
         /* ==================================
-           Start Kuromoji
+           Start Worker
            ================================== */
 
         setTimeout(
@@ -986,42 +891,6 @@ document.addEventListener(
             },
             500
         );
-
-
-        /* ==================================
-           Browser Auto-Fill Support
-           
-           Browser က input value ကို
-           auto-fill လုပ်ပြီးသားဖြစ်နိုင်လို့
-           1 sec နောက်မှာ ပြန်စစ်မယ်
-           ================================== */
-
-        setTimeout(
-            function() {
-
-                convertAllExistingValues();
-
-            },
-            1000
-        );
-
-
-        /* ==================================
-           Extra Auto-Fill Check
-           
-           Browser autofill က နောက်ကျနိုင်လို့
-           2 sec နောက်တစ်ခါ ထပ်စစ်မယ်
-           ================================== */
-
-        setTimeout(
-            function() {
-
-                convertAllExistingValues();
-
-            },
-            2000
-        );
-
 
     }
 );
