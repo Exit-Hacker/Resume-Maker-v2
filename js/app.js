@@ -741,27 +741,111 @@ if(resetForm){
 
     resetForm.addEventListener(
         "click",
-        () => {
+        (event) => {
 
-            if(
-                typeof clearResume === "function"
-            ){
+            event.preventDefault();
+
+            /* =========================
+               Clear saved data
+               ========================= */
+
+            if(typeof clearResume === "function"){
 
                 clearResume();
 
             }
 
-            setTimeout(
-                () => {
 
-                    initBirthday();
+            /* =========================
+               Clear normal inputs
+               ========================= */
 
-                    initResumeDate();
+            const form =
+                resetForm.closest("form");
 
-                    calculateAge();
+            if(form){
 
-                },
-                50
+                form.reset();
+
+            }
+
+
+            /* =========================
+               Clear all text inputs
+               ========================= */
+
+            document
+                .querySelectorAll(
+                    "input[type='text'], input[type='tel'], input[type='email'], input[type='date'], textarea"
+                )
+                .forEach(input => {
+
+                    input.value = "";
+
+                });
+
+
+            /* =========================
+               Clear select boxes
+               ========================= */
+
+            document
+                .querySelectorAll("select")
+                .forEach(select => {
+
+                    select.selectedIndex = 0;
+
+                });
+
+
+            /* =========================
+               Clear photo
+               ========================= */
+
+            const photoPreview =
+                document.getElementById("photoPreview");
+
+            const photoInput =
+                document.getElementById("photo");
+
+            if(photoPreview){
+
+                photoPreview.src = "";
+
+                photoPreview.style.display = "none";
+
+            }
+
+            if(photoInput){
+
+                photoInput.value = "";
+
+            }
+
+
+            /* =========================
+               Reinitialize birthday
+               ========================= */
+
+            initBirthday();
+
+
+            /* =========================
+               Set today's resume date
+               ========================= */
+
+            initResumeDate();
+
+
+            /* =========================
+               Reset age
+               ========================= */
+
+            calculateAge();
+
+
+            console.log(
+                "Resume form has been completely reset."
             );
 
         }
