@@ -1,12 +1,7 @@
 /* ==========================================
    Resume Maker v2
    furigana.js
-   Japanese → Katakana
-   ========================================== */
-
-
-/* ==========================================
-   DOM
+   Lazy Kuromoji initialization
    ========================================== */
 
 const building =
@@ -15,32 +10,29 @@ const building =
 const buildingFurigana =
     document.getElementById("buildingFurigana");
 
-
-/* ==========================================
-   Kuromoji
-   ========================================== */
-
 let tokenizer = null;
-
 let tokenizerReady = false;
+let tokenizerLoading = false;
 
 
 /* ==========================================
-   Initialize
+   Initialize Kuromoji
    ========================================== */
 
 function initFurigana(){
 
-    if(typeof kuromoji === "undefined"){
+    if(tokenizerReady || tokenizerLoading){
+        return;
+    }
 
+    if(typeof kuromoji === "undefined"){
         console.error(
             "Kuromoji.js が読み込まれていません。"
         );
-
         return;
-
     }
 
+    tokenizerLoading = true;
 
     kuromoji.builder({
 
@@ -48,6 +40,8 @@ function initFurigana(){
             "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
 
     }).build((error, instance) => {
+
+        tokenizerLoading = false;
 
         if(error){
 
@@ -57,16 +51,26 @@ function initFurigana(){
             );
 
             return;
-
         }
 
         tokenizer = instance;
 
         tokenizerReady = true;
 
-        console.log(
-            "Kuromoji ready"
-        );
+
+        /* Convert existing text */
+
+        if(
+            building &&
+            building.value.trim()
+        ){
+
+            buildingFurigana.value =
+                convertToKatakana(
+                    building.value
+                );
+
+        }
 
     });
 
@@ -74,50 +78,58 @@ function initFurigana(){
 
 
 /* ==========================================
-   Initialize
-   ========================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    initFurigana
-);
-
-
-/* ==========================================
    Building Input
    ========================================== */
 
-building.addEventListener(
-    "input",
-    () => {
+if(building){
 
-        const text =
-            building.value;
+    /* User can type normally */
 
+    building.addEventListener(
+        "input",
+        () => {
 
-        if(!text){
+            if(!building.value.trim()){
 
-            buildingFurigana.value = "";
+                buildingFurigana.value = "";
 
-            return;
-
-        }
-
-
-        if(!tokenizerReady){
-
-            buildingFurigana.value = "";
-
-            return;
+            }
 
         }
+    );
 
 
-        buildingFurigana.value =
-            convertToKatakana(text);
+    /* Start Kuromoji AFTER leaving field */
 
-    }
-);
+    building.addEventListener(
+        "blur",
+        () => {
+
+            if(!building.value.trim()){
+
+                return;
+
+            }
+
+
+            if(!tokenizerReady){
+
+                initFurigana();
+
+                return;
+
+            }
+
+
+            buildingFurigana.value =
+                convertToKatakana(
+                    building.value
+                );
+
+        }
+    );
+
+}
 
 
 /* ==========================================
@@ -126,33 +138,25 @@ building.addEventListener(
 
 function convertToKatakana(text){
 
+    if(!tokenizer){
+
+        return text;
+
+    }
+
     const tokens =
         tokenizer.tokenize(text);
 
 
-    return tokens.map(token => {
+    return tokens
+        .map(token => {
 
-        /*
-         * Kanji / Japanese word
-         * → reading
-         */
+            return (
+                token.reading ||
+                token.surface_form
+            );
 
-        if(token.reading){
-
-            return token.reading;
-
-        }
-
-
-        /*
-         * Numbers
-         * Alphabet
-         * Symbols
-         * Unknown characters
-         */
-
-        return token.surface_form;
-
-    }).join("");
+        })
+        .join("");
 
 }
